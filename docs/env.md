@@ -35,6 +35,7 @@ yarn add dotenv
 // config/webpack/environment.js
 
 ...
+const webpack = require('webpack');
 const dotenv = require('dotenv');
 
 const dotenvFiles = [
@@ -47,8 +48,9 @@ dotenvFiles.forEach((dotenvFile) => {
   dotenv.config({ path: dotenvFile, silent: true });
 });
 
-module.exports = {
-  ...
+environment.plugins.set('Environment', new webpack.EnvironmentPlugin(JSON.parse(JSON.stringify(process.env))))
+
+module.exports = environment.toWebpackConfig();
 ```
 
 **Warning:** using Foreman/Invoker and npm dotenv at the same time can result in
