@@ -12,21 +12,20 @@ const webpack = require('webpack')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const ManifestPlugin = require('webpack-manifest-plugin')
 
-function getLoaderMap() {
-  const result = new Map()
+function getLoaders() {
+  const result = []
   const paths = sync(resolve(__dirname, 'loaders', '*.js'))
   paths.forEach((path) => {
-    const name = basename(path, extname(path))
-    result.set(name, require(path))
+    result.push(require(path))
   })
   return result
 }
 
-function getPluginMap() {
-  const result = new Map()
-  result.set('Environment', new webpack.EnvironmentPlugin(JSON.parse(JSON.stringify(process.env))))
-  result.set('ExtractText', new ExtractTextPlugin('[name]-[contenthash].css'))
-  result.set('Manifest', new ManifestPlugin({ publicPath: assetHost.publicPath, writeToFileEmit: true }))
+function getPlugins() {
+  const result = []
+  result.push(new webpack.EnvironmentPlugin(JSON.parse(JSON.stringify(process.env))))
+  result.push(new ExtractTextPlugin('[name]-[contenthash].css'))
+  result.push(new ManifestPlugin({ publicPath: assetHost.publicPath, writeToFileEmit: true }))
   return result
 }
 
@@ -59,37 +58,61 @@ function getModulePaths() {
   return result
 }
 
+function addAtPosition(acc, add, options = {top: true}) {
+  options.top ? [add].concat[acc] : [acc].concat[add]
+}
+
+function getBaseConfig(loaders, plugins) {
+  return {
+    entry: getEntryObject(),
+
+    output: {
+      filename: '[name]-[chunkhash].js',
+      chunkFilename: '[name]-[chunkhash].chunk.js',
+      path: assetHost.path,
+      publicPath: assetHost.publicPath
+    },
+
+    module: {
+      rules: loaders
+    },
+
+    plugins: plugins,
+
+    resolve: {
+      extensions: config.extensions,
+      modules: getModulePaths()
+    },
+
+    resolveLoader: {
+      modules: ['node_modules']
+    }
+  }
+}
 module.exports = class Environment {
   constructor() {
-    this.loaders = getLoaderMap()
-    this.plugins = getPluginMap()
+    this.loaders = getLoaders()
+    this.plugins = getPlugins()
+    this.base = getBaseConfig(this.loaders, this.plugins)
+  }
+
+  addPlugin(plugin, options) {
+    addAtPosition(this.plugins, plugin, options)
+  }
+
+  addLoader(loader, options) {
+    addAtPosition(this.loaders, loader, options)
+  }
+
+  addProp(prop) {
+    base.prop = prop
+  }
+
+  getProp(name) {
+    return base.prop
   }
 
   toWebpackConfig() {
-    return {
-      entry: getEntryObject(),
-
-      output: {
-        filename: '[name]-[chunkhash].js',
-        chunkFilename: '[name]-[chunkhash].chunk.js',
-        path: assetHost.path,
-        publicPath: assetHost.publicPath
-      },
-
-      module: {
-        rules: Array.from(this.loaders.values())
-      },
-
-      plugins: Array.from(this.plugins.values()),
-
-      resolve: {
-        extensions: config.extensions,
-        modules: getModulePaths()
-      },
-
-      resolveLoader: {
-        modules: ['node_modules']
-      }
-    }
+    return this.base
   }
 }

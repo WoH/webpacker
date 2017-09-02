@@ -53,7 +53,7 @@ yarn add json-loader
 // config/webpack/environment.js
 const { environment } = require('@rails/webpacker')
 
-environment.loaders.set('json', {
+environment.addLoader({
   test: /\.json$/,
   use: 'json-loader'
 })
@@ -89,12 +89,8 @@ for loaders above:
 const { environment } = require('@rails/webpacker')
 const webpack = require('webpack')
 
-// Get a pre-configured plugin
-environment.plugins.get('ExtractText') // Is an ExtractTextPlugin instance
-
 // Add an additional plugin of your choosing : ProvidePlugin
-environment.plugins.set(
-  'Provide',
+environment.plugins.push(
   new webpack.ProvidePlugin({
     $: 'jquery',
     jQuery: 'jquery',
@@ -120,8 +116,7 @@ Add the plugins in `config/webpack/environment.js`:
 ```js
 const webpack = require('webpack')
 
-environment.plugins.set(
-  'CommonsChunkVendor',
+environment.plugins.push(
   new webpack.optimize.CommonsChunkPlugin({
     name: 'vendor',
     minChunks: (module) => {
@@ -131,8 +126,7 @@ environment.plugins.set(
   })
 )
 
-environment.plugins.set(
-  'CommonsChunkManifest',
+environment.plugins.push(
   new webpack.optimize.CommonsChunkPlugin({
     name: 'manifest',
     minChunks: Infinity
