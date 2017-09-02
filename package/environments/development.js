@@ -8,8 +8,8 @@ module.exports = class extends Environment {
     super()
 
     if (dev_server.hmr) {
-      this.plugins.set('HotModuleReplacement', new webpack.HotModuleReplacementPlugin())
-      this.plugins.set('NamedModules', new webpack.NamedModulesPlugin())
+      this.plugins.push({name: 'HotModuleReplacement', value: new webpack.HotModuleReplacementPlugin()})
+      this.plugins.push({name: 'NamedModules', value: new webpack.NamedModulesPlugin()})
     }
   }
 

@@ -53,10 +53,10 @@ yarn add json-loader
 // config/webpack/environment.js
 const { environment } = require('@rails/webpacker')
 
-environment.loaders.set('json', {
+environment.setLoader({name: 'json', value: {
   test: /\.json$/,
   use: 'json-loader'
-})
+}})
 
 module.exports = environment
 ```
@@ -72,7 +72,7 @@ the `babel` loader as an example:
 const { environment } = require('@rails/webpacker')
 
 // Update an option directly
-const babelLoader = environment.loaders.get('babel')
+const babelLoader = environment.getLoader('babel')
 babelLoader.options.cacheDirectory = false
 
 module.exports = environment
@@ -90,12 +90,13 @@ const { environment } = require('@rails/webpacker')
 const webpack = require('webpack')
 
 // Get a pre-configured plugin
-environment.plugins.get('ExtractText') // Is an ExtractTextPlugin instance
+environment.getPlugin('ExtractText') // Is an ExtractTextPlugin instance
 
 // Add an additional plugin of your choosing : ProvidePlugin
-environment.plugins.set(
+// The name is optional, but should be specified if you want to get the plugin by name at a later point
+environment.addPlugin({name:
   'Provide',
-  new webpack.ProvidePlugin({
+  value: new webpack.ProvidePlugin({
     $: 'jquery',
     jQuery: 'jquery',
     jquery: 'jquery',
@@ -105,7 +106,7 @@ environment.plugins.set(
     Vue: 'vue',
     VueResource: 'vue-resource',
   })
-)
+})
 
 module.exports = environment
 ```
@@ -120,24 +121,24 @@ Add the plugins in `config/webpack/environment.js`:
 ```js
 const webpack = require('webpack')
 
-environment.plugins.set(
-  'CommonsChunkVendor',
-  new webpack.optimize.CommonsChunkPlugin({
+environment.setPlugin({
+  name: 'CommonsChunkVendor',
+  value: new webpack.optimize.CommonsChunkPlugin({
     name: 'vendor',
     minChunks: (module) => {
       // this assumes your vendor imports exist in the node_modules directory
       return module.context && module.context.indexOf('node_modules') !== -1;
     }
   })
-)
+})
 
-environment.plugins.set(
-  'CommonsChunkManifest',
-  new webpack.optimize.CommonsChunkPlugin({
+environment.setPlugin({
+  name: 'CommonsChunkManifest',
+  value: new webpack.optimize.CommonsChunkPlugin({
     name: 'manifest',
     minChunks: Infinity
   })
-)
+})
 ```
 
 Now, add these files to your `layouts/application.html.erb`:
