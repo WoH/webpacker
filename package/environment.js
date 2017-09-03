@@ -12,8 +12,12 @@ const webpack = require('webpack')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const ManifestPlugin = require('webpack-manifest-plugin')
 
-function getLoaderMap() {
-  const result = new Map()
+Array.prototype.set = function(name, value, options) {
+  set(this, name, value, options)
+}
+
+function getLoaders() {
+  let result = []
   const paths = sync(resolve(__dirname, 'loaders', '*.js'))
   paths.forEach((path) => {
     const name = basename(path, extname(path))
@@ -22,8 +26,8 @@ function getLoaderMap() {
   return result
 }
 
-function getPluginMap() {
-  const result = new Map()
+function getPlugins() {
+  let result = []
   result.set('Environment', new webpack.EnvironmentPlugin(JSON.parse(JSON.stringify(process.env))))
   result.set('ExtractText', new ExtractTextPlugin('[name]-[contenthash].css'))
   result.set('Manifest', new ManifestPlugin({ publicPath: assetHost.publicPath, writeToFileEmit: true }))
@@ -59,37 +63,129 @@ function getModulePaths() {
   return result
 }
 
+function getBaseConfig() {
+  return {
+    entry: getEntryObject(),
+
+    output: {
+      filename: '[name]-[chunkhash].js',
+      chunkFilename: '[name]-[chunkhash].chunk.js',
+      path: assetHost.path,
+      publicPath: assetHost.publicPath
+    },
+
+    resolve: {
+      extensions: config.extensions,
+      modules: getModulePaths()
+    },
+
+    resolveLoader: {
+      modules: ['node_modules']
+    }
+  }
+}
+
+function add(array, newEntry, options = {top: false}) {
+  options.top ? array.unshift(newEntry) : array.push(newEntry)
+}
+
+function getIndexByName(array, name) {
+  let result;
+  array.filter((entry, index) => {
+    if(entry.name === name)
+      result = index
+  })
+  return result
+}
+
+function set(array, name, value, options = {top: false}) {
+  const index = getIndexByName(array, name)
+  if(index || index === 0) {
+    array[index] = {name, value}
+    if(options.top) {
+      array.splice(index, 1)
+      return add(array, {name, value}, options)
+    }
+  } else {
+    return add(array, {name, value}, options)
+  }
+}
+
+function get(array, name) {
+  return array[getIndexByName(array, name)]
+}
+
+function remove(array, name) {
+  const index = getIndexByName(array, name)
+  if(index || index === 0) {
+    return array.splice(index, 1)
+  }
+}
+
 module.exports = class Environment {
   constructor() {
-    this.loaders = getLoaderMap()
-    this.plugins = getPluginMap()
+    this.loaders = getLoaders()
+    this.plugins = getPlugins()
+    this.base = getBaseConfig()
+    Array.prototype.set = function(name, value, options) {
+      return set(this, name, value, options)
+    }
+    Array.prototype.get = function(name) {
+      return get(this, name)
+    }
+    Array.prototype.remove = function(name) {
+      return remove(this, name)
+    }
+  }
+
+  getLoader(name) {
+    return this.loaders[getIndexByName(this.loaders, name)]
+  }
+
+  setLoader(name, value, options = {top: false}) {
+    return set(this.loaders, name, value, options)
+  }
+
+  removeLoader(name) {
+    return remove(this.loaders, name)
+  }
+
+  getPlugin(name) {
+    return this.plugins[getIndexByName(this.plugins, name)]
+  }
+
+  setPlugin(name, value, options = {top: false}) {
+    return set(this.plugins, name, value, options)
+  }
+
+  removePlugin(name) {
+    return remove(this.plugins, name)
+  }
+
+  getProp(name) {
+    return this.base[name]
+  }
+
+  setProp(name, value) {
+    this.base[name] = value
+  }
+
+  removeProp(name) {
+    let deletion = this.base[name]
+    if(deletion) {
+      delete this.base[name]
+    }
+    return deletion
   }
 
   toWebpackConfig() {
+    let rules = [], plugins = []
+    this.loaders.forEach(loader => rules.push(loader.value))
+    this.plugins.forEach(plugin => plugins.push(plugin.value))
     return {
-      entry: getEntryObject(),
-
-      output: {
-        filename: '[name]-[chunkhash].js',
-        chunkFilename: '[name]-[chunkhash].chunk.js',
-        path: assetHost.path,
-        publicPath: assetHost.publicPath
-      },
-
-      module: {
-        rules: Array.from(this.loaders.values())
-      },
-
-      plugins: Array.from(this.plugins.values()),
-
-      resolve: {
-        extensions: config.extensions,
-        modules: getModulePaths()
-      },
-
-      resolveLoader: {
-        modules: ['node_modules']
-      }
+      ...this.base,
+      module: {rules},
+      plugins
     }
   }
 }
