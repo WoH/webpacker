@@ -59,10 +59,6 @@ function getModulePaths() {
   return result
 }
 
-function addAtPosition(acc, add, options = {top: true}) {
-  options.top ? [add].concat[acc] : [acc].concat[add]
-}
-
 function getBaseConfig() {
   return {
     entry: getEntryObject(),
@@ -85,11 +81,34 @@ function getBaseConfig() {
   }
 }
 
+function addAtPosition(array, newEntry, options = {top: false}) {
+  options.top ? [newEntry].concat[array] : [array].concat[newEntry]
+}
+
 function getIndexByName(array, name) {
+  let result;
   array.filter((entry, index) => {
     if(entry.name === name)
-      return index
+      result = index
   })
+  return result
+}
+
+function set(array, {name, value}, options = {top: false}) {
+  const index = getIndexByName(array, name)
+  if(index) {
+    array[index] = {name, value}
+    if(options.top) {
+      delete array[index]
+      addAtPosition(array, {name, value}, options)
+    }
+  } else {
+    addAtPosition(array, {name, value}, options)
+  }
+}
+
+function get(array, name) {
+  return array[getIndexByName(array, name)]
 }
 
 module.exports = class Environment {
@@ -97,29 +116,20 @@ module.exports = class Environment {
     this.loaders = getLoaders()
     this.plugins = getPlugins()
     this.base = getBaseConfig()
-    Array.prototype.set = function(name, value) {
-      this.setLoader({name, value})
-    }.bind(this)
+    Array.prototype.set = function(name, value, options) {
+      set(this, {name, value}, options)
+    }
     Array.prototype.get = function(name) {
-      this.getLoader(name)
-    }.bind(this)
-  }
-
-  addLoader(loader, options) {
-    addAtPosition(this.loaders, loader, options)
+      get(this, name)
+    }
   }
 
   getLoader(name) {
     return this.loaders[getIndexByName(this.loaders, name)]
   }
 
-  setLoader({name, value}) {
-    const index = getIndexByName(this.loaders, name)
-    if(index) {
-      this.loaders[index] = {name, value}
-    } else {
-      this.addLoader({name, value})
-    }
+  setLoader(name, value, options = {top: false}) {
+    set(this.loaders, {name, value}, options)
   }
 
   removeLoader(name) {
@@ -129,21 +139,12 @@ module.exports = class Environment {
     }
   }
 
-  addPlugin(plugin, options) {
-    addAtPosition(this.plugins, plugin, options)
-  }
-
   getPlugin(name) {
     return this.plugins[getIndexByName(this.plugins, name)]
   }
 
-  setPlugin({name, value}) {
-    const index = getIndexByName(this.plugins, name)
-    if(index) {
-      this.plugins[getIndexByName(this.plugins, name)] = {name, value}
-    } else {
-      addPlugin({name, value})
-    }
+  setPlugin(name, value, options = {top: false}) {
+    set(this.plugins, {name, value}, options)
   }
 
   removePlugin(name) {
@@ -153,12 +154,16 @@ module.exports = class Environment {
     }
   }
 
-  addProp({name, value}) {
+  getProp(name) {
+    return this.base[name]
+  }
+
+  setProp(name, value) {
     this.base[name] = value
   }
 
-  getProp(name) {
-    return this.base[name]
+  removeProp(name) {
+    delete this.base[name]
   }
 
   toWebpackConfig() {

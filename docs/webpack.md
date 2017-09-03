@@ -53,10 +53,10 @@ yarn add json-loader
 // config/webpack/environment.js
 const { environment } = require('@rails/webpacker')
 
-environment.setLoader({name: 'json', value: {
+environment.setLoader('json', {
   test: /\.json$/,
   use: 'json-loader'
-}})
+})
 
 module.exports = environment
 ```
@@ -94,9 +94,8 @@ environment.getPlugin('ExtractText') // Is an ExtractTextPlugin instance
 
 // Add an additional plugin of your choosing : ProvidePlugin
 // The name is optional, but should be specified if you want to get the plugin by name at a later point
-environment.addPlugin({name:
-  'Provide',
-  value: new webpack.ProvidePlugin({
+environment.setPlugin('Provide',
+  new webpack.ProvidePlugin({
     $: 'jquery',
     jQuery: 'jquery',
     jquery: 'jquery',
@@ -106,7 +105,7 @@ environment.addPlugin({name:
     Vue: 'vue',
     VueResource: 'vue-resource',
   })
-})
+)
 
 module.exports = environment
 ```
@@ -121,24 +120,24 @@ Add the plugins in `config/webpack/environment.js`:
 ```js
 const webpack = require('webpack')
 
-environment.setPlugin({
-  name: 'CommonsChunkVendor',
-  value: new webpack.optimize.CommonsChunkPlugin({
+environment.setPlugin(
+  'CommonsChunkVendor',
+  new webpack.optimize.CommonsChunkPlugin({
     name: 'vendor',
     minChunks: (module) => {
       // this assumes your vendor imports exist in the node_modules directory
       return module.context && module.context.indexOf('node_modules') !== -1;
     }
   })
-})
+)
 
-environment.setPlugin({
-  name: 'CommonsChunkManifest',
-  value: new webpack.optimize.CommonsChunkPlugin({
+environment.setPlugin(
+  'CommonsChunkManifest',
+  new webpack.optimize.CommonsChunkPlugin({
     name: 'manifest',
     minChunks: Infinity
   })
-})
+)
 ```
 
 Now, add these files to your `layouts/application.html.erb`:
