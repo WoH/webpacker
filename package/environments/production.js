@@ -6,9 +6,9 @@ module.exports = class extends Environment {
   constructor() {
     super()
 
-    this.plugins.push({name: 'ModuleConcatenation', value: new webpack.optimize.ModuleConcatenationPlugin()})
+    this.plugins.set('ModuleConcatenation', new webpack.optimize.ModuleConcatenationPlugin())
 
-    this.plugins.push({name: 'UglifyJs', value: new webpack.optimize.UglifyJsPlugin({
+    this.plugins.set('UglifyJs', new webpack.optimize.UglifyJsPlugin({
       sourceMap: true,
       compress: {
         warnings: false
@@ -16,13 +16,13 @@ module.exports = class extends Environment {
       output: {
         comments: false
       }
-    })})
+    }))
 
-    this.plugins.push({name: 'Compression', value: new CompressionPlugin({
+    this.plugins.set('Compression', new CompressionPlugin({
       asset: '[path].gz[query]',
       algorithm: 'gzip',
       test: /\.(js|css|html|json|ico|svg|eot|otf|ttf)$/
-    })})
+    }))
   }
 
   toWebpackConfig() {
