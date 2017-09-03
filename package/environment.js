@@ -17,16 +17,16 @@ function getLoaders() {
   const paths = sync(resolve(__dirname, 'loaders', '*.js'))
   paths.forEach((path) => {
     const name = basename(path, extname(path))
-    result.push({name, value: require(path)})
+    result.set(name, require(path))
   })
   return result
 }
 
 function getPlugins() {
   const result = []
-  result.push({name: 'Environment', value: new webpack.EnvironmentPlugin(JSON.parse(JSON.stringify(process.env)))})
-  result.push({name: 'ExtractText', value: new ExtractTextPlugin('[name]-[contenthash].css')})
-  result.push({name: 'Manifest', value: new ManifestPlugin({ publicPath: assetHost.publicPath, writeToFileEmit: true })})
+  result.set('Environment', new webpack.EnvironmentPlugin(JSON.parse(JSON.stringify(process.env))))
+  result.set('ExtractText', new ExtractTextPlugin('[name]-[contenthash].css'))
+  result.set('Manifest', new ManifestPlugin({ publicPath: assetHost.publicPath, writeToFileEmit: true }))
   return result
 }
 
