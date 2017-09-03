@@ -97,6 +97,12 @@ module.exports = class Environment {
     this.loaders = getLoaders()
     this.plugins = getPlugins()
     this.base = getBaseConfig()
+    Array.prototype.set = function(name, value) {
+      this.setLoader({name, value})
+    }.bind(this)
+    Array.prototype.get = function(name) {
+      this.getLoader(name)
+    }.bind(this)
   }
 
   addLoader(loader, options) {
