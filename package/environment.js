@@ -163,7 +163,11 @@ module.exports = class Environment {
   }
 
   removeProp(name) {
-    delete this.base[name]
+    let deletion = this.base[name]
+    if(deletion) {
+      delete this.base[name]
+    }
+    return deletion
   }
 
   toWebpackConfig() {
