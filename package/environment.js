@@ -17,7 +17,7 @@ function getLoaders() {
   const paths = sync(resolve(__dirname, 'loaders', '*.js'))
   paths.forEach((path) => {
     const name = basename(path, extname(path))
-    result.push({name: name, value: require(path)})
+    result.push({name, value: require(path)})
   })
   return result
 }
@@ -174,7 +174,7 @@ module.exports = class Environment {
     let rules = [], plugins = []
     this.loaders.forEach(loader => rules.push(loader.value))
     this.plugins.forEach(plugin => plugins.push(plugin.value))
-    this.addProp({name: 'module', value: {rules: rules}})
+    this.addProp({name: 'module', value: {rules}})
     this.addProp({name: 'plugins', value: plugins})
     return this.base
   }
